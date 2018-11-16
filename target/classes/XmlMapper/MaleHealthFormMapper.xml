@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Mapper.MaleHealthFormMapper">
+    <select id="getMaleHealthForm" resultType="MaleHealthForm">
+        select id,EMP_ID empId, HEART,LIVER,SPLEEN,LUNG,KIDNEY,PROSTATE,NOTE
+        from T_MALE_HEALTH_FORM
+        where EMP_ID = #{empId}
+    </select>
+</mapper>

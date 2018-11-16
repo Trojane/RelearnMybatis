@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Mapper.EmployeeMapper">
+
+    <cache-ref namespace="Mapper.WorkCardMapper"/>
+
+    <select id="getEmployee2" resultMap="employeeMap2" databaseId="oracle">
+
+        select emp.ID,emp.REAL_NAME,emp.SEX,emp.BIRTHDAY,emp.MOBILE,emp.EMAIL,emp.POSITION,emp.NOTE,
+        tet.ID tet_id, tet.TASK_NAME tet_task_name, tet.NOTE tet_note,tet.TASK_ID,
+        tt.id tt_id,tt.TITLE,tt.CONTEXT,tt.NOTE tt_note,
+        twc.ID twc_id, twc.POSITION twc_position, twc.MOBILE twc_mobile, twc.REAL_NAME twc_real_name, twc.DEPARTMENT,twc.NOTE twc_note,
+        case when emp.SEX=1 then tmhf.ID else tfhf.ID  end as h_id,
+        case when emp.SEX=1 then tmhf.HEART else tfhf.HEART  end as h_heart,
+        case when emp.SEX=1 then tmhf.LUNG else tfhf.LUNG  end as h_lung,
+        case when emp.SEX=1 then tmhf.LIVER else tfhf.LIVER end as h_liver,
+        case when emp.SEX=1 then tmhf.SPLEEN else tfhf.SPLEEN  end as h_spleen,
+        case when emp.SEX=1 then tmhf.KIDNEY else tfhf.KIDNEY  end as h_kidney,
+        case when emp.SEX=1 then tmhf.NOTE else tfhf.NOTE  end as h_note,
+        tmhf.PROSTATE as h_prostate, tfhf.UTERUS as h_uterus
+        from T_EMPLOYEE emp
+        left join T_WORK_CARD twc on emp.ID = twc.EMP_ID
+        left join T_EMPLOYEE_TASK tet on emp.ID = tet.EMP_ID
+        left join T_TASK tt on tet.TASK_ID = tt.ID
+        left join T_MALE_HEALTH_FORM tmhf on emp.ID = tmhf.EMP_ID
+        left join T_FEMALE_HEALTH_FORM tfhf on emp.ID = tfhf.EMP_ID
+        where emp.ID = #{id}
+    </select>
+
+    <resultMap id="employeeMap" type="Employee">
+
+        <id property="id" column="id"/>
+        <result property="realName" column="REAL_NAME"/>
+        <result property="birthday" column="birthday"/>
+        <result property="mobile" column="MOBILE"/>
+        <result property="email" column="EMAIL"/>
+        <result property="position" column="POSITION"/>
+        <result property="note" column="NOTE"/>
+        <result property="sex" column="SEX" typeHandler="Utils.SexEnumTyperHandler"/>
+        <association property="workCard" column="id" select="Mapper.WorkCardMapper.getWorkCardByEmpId"/>
+        <collection property="employeeTaskList" column="id" select="Mapper.EmployeeTaskMapper.getEmployeeTaskByEmpId"/>
+        <discriminator javaType="long" column="SEX">
+            <case value="1" resultMap="maleHealthForm"></case>
+            <case value="0" resultMap="femaleHealthForm"></case>
+        </discriminator>
+
+        </resultMap>
+
+        <resultMap id="maleHealthForm" type="MaleEmployee" extends="employeeMap">
+            <association property="maleHealthForm" column="id"
+                         select="Mapper.MaleHealthFormMapper.getMaleHealthForm"/>
+
+        </resultMap>
+
+        <resultMap id="femaleHealthForm" type="FemaleEmployee" extends="employeeMap">
+            <association property="femaleHealthForm" column="id"
+                         select="Mapper.FemaleHealthFormMapper.getFemaleHealthForm"/>
+        </resultMap>
+
+    <select id="getEmployee" resultMap="employeeMap">
+        select id, REAL_NAME, SEX, BIRTHDAY, MOBILE, EMAIL, POSITION, NOTE
+        from T_EMPLOYEE
+        where id = #{id}
+    </select>
+
+
+
+
+    <resultMap id="employeeMap2" type="Employee">
+
+        <id property="id" column="ID" />
+        <result property="realName" column="REAL_NAME"/>
+        <result property="sex" column="SEX" typeHandler="Utils.SexEnumTyperHandler"/>
+        <result property="birthday" column="BIRTHDAY"/>
+        <result property="mobile" column="MOBILE"/>
+        <result property="email" column="EMAIL"/>
+        <result property="position" column="POSITION"/>
+        <result property="note" column="NOTE"/>
+        <!--出现内部空指针异常是缺少下面javaType="WorkCard"-->
+        <association property="workCard" column="ID" javaType="WorkCard">
+            <id property="id" column="twc_id"/>
+            <result property="empId" column="ID"/>
+            <result property="realName" column="twc_real_name"/>
+            <result property="department" column="DEPARTMENT"/>
+            <result property="mobile" column="twc_mobile"/>
+            <result property="position" column="twc_position"/>
+            <result property="note" column="twc_note"/>
+        </association>
+        <collection property="employeeTaskList" column="ID" ofType="EmployeeTask">
+            <id property="id" column="tet_id"/>
+            <result property="empId" column="ID"/>
+            <result property="taskName" column="tet_task_name"/>
+            <result property="note" column="tet_note"/>
+            <association property="task" column="TASK_ID" javaType="Task">
+                <id property="id" column="tt_id"/>
+                <result property="title" column="TITLE"/>
+                <result property="context" column="CONTEXT"/>
+                <result property="note" column="tt_note"/>
+            </association>
+        </collection>
+        <discriminator javaType="long" column="SEX">
+            <case value="1" resultMap="maleHealthFormMapper2"/>
+            <case value="0" resultMap="femaleHealthFormMapper2"/>
+        </discriminator>
+
+    </resultMap>
+
+
+    <resultMap id="femaleHealthForm2" type="FemaleEmployee" extends="employeeMap2">
+        <association property="femaleHealthForm" column="ID" javaType="FemaleHealthForm">
+            <id property="id" column="h_id"/>
+            <result property="empId" column="ID"/>
+            <result property="heart" column="h_heart"/>
+            <result property="liver" column="h_liver"/>
+            <result property="spleen" column="h_spleen"/>
+            <result property="lung" column="h_lung"/>
+            <result property="kidney" column="h_kidney"/>
+            <result property="note" column="h_note"/>
+            <result property="uterus" column="h_uterus"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="maleHealthFormMapper2" type="MaleEmployee" extends="employeeMap2">
+        <association property="maleHealthForm" column="ID" javaType="MaleHealthForm">
+            <id property="id" column="h_id"/>
+            <result property="empId" column="ID"/>
+            <result property="heart" column="h_heart"/>
+            <result property="liver" column="h_liver"/>
+            <result property="spleen" column="h_spleen"/>
+            <result property="lung" column="h_lung"/>
+            <result property="kidney" column="h_kidney"/>
+            <result property="note" column="h_note"/>
+            <result property="prostate" column="h_prostate"/>
+        </association>
+    </resultMap>
+
+
+
+</mapper>

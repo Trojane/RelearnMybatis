@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--通过配置文件自身创建Mapper-->
+<!--<mapper namespace="roleMapper">-->
+
+<!--通过接口创建Mapper-->
+<mapper namespace="Mapper.RoleMapper">
+
+    <sql id="column">
+
+        id, name as roleName, age
+
+    </sql>
+
+    <select id="selectRoleById" resultType="Role" parameterType="java.lang.String" databaseId="oracle">
+        select <include refid="column"/> from ROLE where id = #{id}
+    </select>
+
+    <insert id="insertRole" parameterType="POJO.Role">
+        insert into role(id,name,age) values (#{id}, #{roleName},#{age})
+    </insert>
+    
+    <delete id="deleteRole" parameterType="POJO.Role">
+        delete from ROLE where id = #{id} or NAME = #{roleName}
+    </delete>
+    
+    <update id="updateRole" parameterType="Role">
+        update ROLE set id=#{id,jdbcType=NUMERIC}, name = #{roleName,jdbcType=VARCHAR}, age = #{age,jdbcType=NUMERIC} where ID = #{id,jdbcType=VARCHAR}
+    </update>
+
+    <select id="selectAllByFirstName" parameterType="java.lang.String" resultType="int">
+        select count(1) total from ROLE where NAME like concat(#{name},'%')
+    </select>
+
+    <select id="findAllByMap" parameterType="map" resultType="Role">
+        select <include refid="column"/>ROLE
+        where name like concat(concat('%',#{rolename}),'%')
+        and  AGE like concat(concat('%',#{age}),'%')
+    </select>
+
+    <select id="findAllByAnno"  resultType="Role">
+        select <include refid="column"/> from ROLE
+        where name like concat(concat('%',#{rolename}),'%')
+        and  AGE like concat(concat('%',#{age}),'%')
+
+    </select>
+
+
+    <select id="findAllByBean"  resultType="Role">
+        select <include refid="column"/> from ROLE
+        where name like concat(concat('%',#{roleName}),'%')
+        and  AGE like concat(concat('%',#{age}),'%')
+    </select>
+
+
+    <resultMap id="roleMap" type="Role">
+
+        <id property="id" column="id"/>
+        <result property="roleName" column="name"/>
+        <result property="age" column="age"/>
+
+    </resultMap>
+
+
+    <select id="findAllToMap" resultMap="roleMap">
+
+
+        select id, NAME,AGE from ROLE where id = #{name}
+
+    </select>
+
+</mapper>
+
